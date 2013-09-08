@@ -210,66 +210,71 @@ def pairdisttree(alignments,seqnames,bootstrap=False):
             os.remove(NJ_TREE) 
 
     # now we generate a matrix for input to neighbor
-    dm=open(INFILE_NEIGHBOR,'w')
+    dm = open(INFILE_NEIGHBOR,'w')
     dm.write('    %d\n' % len(seqnames))
-    for i,s1 in enumerate(seqnames):
+    for i, s1 in enumerate(seqnames):
         dm.write('%-10s' % s1)
-        for j,s2 in enumerate(seqnames):
-            if i!=j:
-               dm.write('  %1.6f' % distdict[(s1,s2)])
+        for j, s2 in enumerate(seqnames):
+            if i != j:
+                dm.write('  %1.6f' % distdict[(s1, s2)])
             else:
-               dm.write('  0.000000')
+                dm.write('  0.000000')
         dm.write('\n')
     dm.close()
 
-    nj=open(NEIGHBOR_COMMANDFILE,'w')
+    nj = open(NEIGHBOR_COMMANDFILE, 'w')
     nj.write(NEIGHBOR_COMMANDS)
     nj.close()
-    os.system('%s <%s >neighbor.log' % (NEIGHBOR,NEIGHBOR_COMMANDFILE))
+    os.system('%s <%s >neighbor.log' % (NEIGHBOR, NEIGHBOR_COMMANDFILE))
 
-    ot=open(NJ_TREE).read().replace('\n','')
+    ot = open(NJ_TREE).read().replace('\n', '')
     return ot
 
-if __name__=='__main__': 
-    parser=OptionParser()
-    parser.add_option('-s','--strip',dest='strip',action='store_true',default=False,help='strip alignment from unmatched ends')
-    parser.add_option('-b','--bootstrap',dest='bootstrap',action='store_true',default=False,help='Calculate bootstraps')
-    parser.add_option('-n','--nreps',dest='nreps',default=100,type='int',help='number of bootstrap replicates')
-    options,args=parser.parse_args()
-    
-    seqs=[(s.id,s.seq.tostring()) for s in list(AlignIO.read(args[0],'fasta'))]
-    safenames={}
-    seqsnew=[]
-    # PHYLIP software needs strict phylip format, i.e. seuqence names of exact 10 characters
-    # we substitute original sequence names during script execution
-    for i,(seqname,seq) in enumerate(seqs):
-        safename=str(i).zfill(3)+seqname[:4]+str(i).zfill(3)
-        safename=safename[:10] # 10 characters max
-        safename=''.join([c for c in safename if c.isalnum()])
-        safename=safename.zfill(10)
-        safenames[safename]=seqname
-        seqsnew.append((safename,seq.replace('-','')))
-        #print seqname,' -> ',safename
-    all_alignments=all_pairwise_alignments(seqsnew,stripgaps=options.strip)
-    safenamesorder=zip(*seqsnew)[0]
 
-    trees=[]
+if __name__ == '__main__':
+    parser = OptionParser()
+    parser.add_option('-s', '--strip', dest='strip', action='store_true', default=False, help='strip alignment from unmatched ends')
+    parser.add_option('-b', '--bootstrap', dest='bootstrap', action='store_true', default=False, help='Calculate bootstraps')
+    parser.add_option('-n', '--nreps', dest='nreps', default=100, type='int', help='number of bootstrap replicates')
+    options, args = parser.parse_args()
+    seqs = [(s.id, s.seq.tostring())
+            for s in list(AlignIO.read(args[0], 'fasta'))]
+    safenames = {}
+    seqsnew = []
+    # PHYLIP software needs strict phylip format, i.e. sequence names
+    # of exactly 10 characters. We substitute original sequence names
+    # during script execution
+    for i, (seqname, seq) in enumerate(seqs):
+        safename = str(i).zfill(3) + seqname[:4] + str(i).zfill(3)
+        safename = safename[:10]  # 10 characters max
+        safename = ''.join([c for c in safename if c.isalnum()])
+        safename = safename.zfill(10)
+        safenames[safename] = seqname
+        seqsnew.append((safename, seq.replace('-', '')))
+        #print seqname,' -> ',safename
+    all_alignments = all_pairwise_alignments(seqsnew, stripgaps=options.strip)
+    safenamesorder = zip(*seqsnew)[0]
+
+    trees = []
     if options.bootstrap:
-        log=open('pairdist_bootstrap.log','w')
+        log = open('pairdist_bootstrap.log', 'w')
         for i in range(options.nreps):
-            print 'Bootstrap %d / %d' %(i+1,options.nreps)
-            bs_tree=pairdisttree(all_alignments,safenamesorder,bootstrap=True)
+            print 'Bootstrap %d / %d' % (i+1, options.nreps)
+            bs_tree = pairdisttree(all_alignments,
+                                   safenamesorder, bootstrap=True)
             trees.append(bs_tree)
             log.write(bs_tree+'\n')
             log.flush()
         log.close()
     else:
-        trees=[pairdisttree(all_alignments,safenamesorder)]
+        trees = [pairdisttree(all_alignments, safenamesorder)]
 
-    otn=open(args[0]+'.tree','w')
+    otn = open(args[0] + '.tree', 'w')
     otn.write('begin trees;\n')
-    for i,t in enumerate(trees):
-        otn.write('tree pdtree%d = %s;\n' % (i,replace_safenames(t,safenames)))
+    for i, t in enumerate(trees):
+        otn.write('tree pdtree%d = %s;\n' %
+                  (i, replace_safenames(t, safenames)))
     otn.write('end;\n')
     otn.close()
 
+sys.exit(0)
