@@ -22,7 +22,9 @@ __author__ = "Frank Kauff <frank.kauff@gmx.de>"
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-## Modified by Frédéric Mahé <mahe@rhrk.uni-kl.fr>
+
+# This version of pairdist has been modified by Frédéric Mahé
+# <mahe@rhrk.uni-kl.fr>
 
 # Needed for proper execution:
 #   'protdist' and 'neighbor' commands from PHYLIP software package
