@@ -152,7 +152,7 @@ def all_pairwise_alignments(sequences, stripgaps=False):
             bs1 = ''
             bs2 = ''
             for i in range(len(bestseq1)):
-                if bestseq1[i] <> '-' and bestseq2[i] <> '-':
+                if bestseq1[i] != '-' and bestseq2[i] != '-':
                     bs1 += bestseq1[i]
                     bs2 += bestseq2[i]
             all_alignments.append(((p[0][0], bs1), (p[1][0], bs2)))
@@ -204,7 +204,7 @@ def pairdisttree(alignments, seqnames, bootstrap=False):
     # Read output of PROTDIST and verify length
     distdict = {}
     outfile = open(OUTFILE_PROTDIST).readlines()
-    if len(outfile) <> npairs * 3:
+    if len(outfile) != npairs * 3:
         sys.exit('Error in PROTDIST outfile\n' + '\n'.join(outfile))
 
     # format PROTDIST output and generate input file for neighbor
