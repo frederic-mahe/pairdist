@@ -31,7 +31,9 @@ __author__ = "Frank Kauff <frank.kauff@gmx.de>"
 #   'clustalw2' from CLUSTAL software package
 #   Biopython: avaliable at www.biopython.org
 
-import sys, os, random
+import os
+import sys
+import random
 from optparse import OptionParser
 from Bio import pairwise2, AlignIO
 from Bio.Align.Applications import ClustalwCommandline
