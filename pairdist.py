@@ -27,9 +27,9 @@ __author__ = "Frank Kauff <frank.kauff@gmx.de>"
 # <mahe@rhrk.uni-kl.fr>
 
 # Needed for proper execution:
-#   'protdist' and 'neighbor' commands from PHYLIP software package
-#   'clustalw2' from CLUSTAL software package
-#   Biopython: avaliable at www.biopython.org
+# -  "dnadist", "protdist" and "neighbor" commands from the PHYLIP software package <http://evolution.genetics.washington.edu/phylip.html>
+# -  "clustalw2" from CLUSTAL software package <http://www.clustal.org/>
+# -  Biopython: avaliable at www.biopython.org
 
 import os
 import sys
@@ -38,10 +38,14 @@ from optparse import OptionParser
 from Bio import pairwise2, AlignIO
 from Bio.Align.Applications import ClustalwCommandline
 
-# commands needed. If these are not in your regular $PATH, adjust here
-CLUSTALWCOMMAND = 'clustalw2'
-PROTDIST = 'protdist'
-NEIGHBOR = 'neighbor'
+# Commands needed. If these are not in your regular $PATH, adjust
+# here. With recent versions of phylip, the commands "dnadist" and
+# "neighbor" has to be preceeded by the command "phylip": "phylip
+# dnadist" for instance. Older versions can call the sub-programs
+# directly.
+CLUSTALWCOMMAND = 'clustalw'
+PROTDIST = "phylip dnadist"
+NEIGHBOR = 'phylip neighbor'
 NJ_TREE = 'outtree'
 
 # If no clustalw is available, Bio.pairwise (slower) can be used as a
@@ -62,22 +66,19 @@ NEIGHBOR_COMMANDFILE = 'njcommand'
 
 # input commands for protdist and neighbor
 
-PROTDIST_COMMANDS = """
-2
+PROTDIST_COMMANDS = """2
 m
 d
 %d
 y
 """
 
-NEIGHBOR_COMMANDS = """
-2
+NEIGHBOR_COMMANDS = """2
 3
 y
 """
 
-INFILE_FORMAT = '%d %d\n%-10s%s\n%-10s%s\n'
-
+INFILE_FORMAT = '%d %d\n%-10s %s\n%-10s %s\n'
 
 def replace_safenames(tree, sndict):
     """Replaces the safe OTU descriptions with original OTUs."""
@@ -123,6 +124,10 @@ def align_clustalw(seq1, seq2):
     length = clustalalignment.get_alignment_length()
     allseqs = list(clustalalignment)
     bestseq1, bestseq2 = allseqs[0].seq.tostring(), allseqs[1].seq.tostring()
+    # clean clustal files
+    os.remove(CLUSTALFASTA)
+    os.remove(CLUSTALALIGNMENT)
+    os.remove("clustal.dnd")
     return bestseq1, bestseq2, length
 
 
@@ -199,7 +204,7 @@ def pairdisttree(alignments, seqnames, bootstrap=False):
     pc.close()
 
     # Execute PROTDIST
-    os.system('%s <%s >log' % (PROTDIST, PROTDIST_COMMANDFILE))
+    os.system('%s < %s > log' % (PROTDIST, PROTDIST_COMMANDFILE))
 
     # Read output of PROTDIST and verify length
     distdict = {}
@@ -270,7 +275,7 @@ if __name__ == '__main__':
         safename = safename.zfill(10)
         safenames[safename] = seqname
         seqsnew.append((safename, seq.replace('-', '')))
-        #print seqname,' -> ',safename
+        # print seqname,' -> ',safename
     all_alignments = all_pairwise_alignments(seqsnew, stripgaps=options.strip)
     safenamesorder = zip(*seqsnew)[0]
 
@@ -297,3 +302,6 @@ if __name__ == '__main__':
     otn.close()
 
 sys.exit(0)
+
+# python pairdist.py test.fas_aln
+# rm log clustal.* infile outfile protcommand neighbor.log njcommand *tree
