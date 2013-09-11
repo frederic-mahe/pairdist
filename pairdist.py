@@ -28,6 +28,7 @@ __author__ = "Frank Kauff <frank.kauff@gmx.de>"
 import os
 import sys
 import random
+import itertools
 import subprocess
 from optparse import OptionParser
 from Bio import pairwise2, AlignIO
@@ -164,12 +165,9 @@ def replace_safenames(tree, sndict):
     return tree
 
 
-def getpairs(seqs):
+def get_all_possible_pairs(sequences):
     """Returns a list of all possible unique sequence pairs."""
-    pairs = []
-    for i, s1 in enumerate(seqs):
-        for s2 in seqs[i+1:]:
-            pairs.append((s1, s2))
+    pairs = [pair for pair in itertools.combinations(sequences, 2)]
     return pairs
 
 
@@ -225,7 +223,7 @@ def all_pairwise_alignments(sequences, stripgaps=False):
     pairwise alignments. Positions with only gaps in both aligned
     sequences can be stripped off.
     """
-    allpairs = getpairs(sequences)
+    allpairs = get_all_possible_pairs(sequences)
     all_alignments = []
     for i, p in enumerate(allpairs):
         print '%d of %d ' % (i+1, len(allpairs))
@@ -332,8 +330,13 @@ if __name__ == '__main__':
     input_file, strip, bootstrap, nreps = option_parser()
     CLUSTALWCOMMAND, PROTDIST, NEIGHBOR = sanity_check()
 
+    # create tmp files and pointers
+
+    # parse the fasta file (normal IO, degap reads if needed)
     seqs = [(s.id, s.seq.tostring())
             for s in list(AlignIO.read(input_file, 'fasta'))]
+    
+    # use safenames
     safenames = {}
     seqsnew = []
     # PHYLIP software needs strict phylip format, i.e. sequence names
@@ -347,6 +350,8 @@ if __name__ == '__main__':
         safenames[safename] = seqname
         seqsnew.append((safename, seq.replace('-', '')))
         # print seqname,' -> ',safename
+
+    # do the pairwise alignments
     all_alignments = all_pairwise_alignments(seqsnew, stripgaps=strip)
     safenamesorder = zip(*seqsnew)[0]
 
