@@ -22,7 +22,6 @@ __author__ = "Frank Kauff <frank.kauff@gmx.de>"
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 # This version of pairdist has been modified by Frédéric Mahé
 # <mahe@rhrk.uni-kl.fr>
 
@@ -79,6 +78,53 @@ y
 """
 
 INFILE_FORMAT = '%d %d\n%-10s %s\n%-10s %s\n'
+
+#******************************************************************************#
+#                                                                              #
+#                                  Functions                                   #
+#                                                                              #
+#******************************************************************************#
+
+def option_parser():
+    """
+    Parse arguments from command line.
+    """
+    desc = """Pairdist creates a neighbor-joining tree from a set of
+    sequences, using maximum likelihood distances based on pairwise
+    sequence alignments."""
+    
+    parser = OptionParser(usage="usage: %prog --input_file fasta_file [--strip --bootstrap --nreps integer]",
+                          description = desc,
+                          version = "%prog version 1.0")
+
+    parser.add_option("-i", "--input_file",
+                      metavar = "<FILENAME>",
+                      action = "store",
+                      dest = "input_file",
+                      help = "set <FILENAME> as input fasta file.")
+
+    parser.add_option("-s", "--strip",
+                      dest = "strip",
+                      action = "store_true",
+                      default = False,
+                      help = "strip alignment from unmatched ends")
+
+    parser.add_option("-b", "--bootstrap",
+                      dest = "bootstrap",
+                      action = "store_true",
+                      default = False,
+                      help = "calculate bootstraps")
+
+    parser.add_option("-n", "--nreps",
+                      dest = "nreps",
+                      default = 100,
+                      type = "int",
+                      help = "number of bootstrap replicates")
+
+    (options, args) = parser.parse_args()
+    
+    return options.input_file, options.strip, options.bootstrap, options.nreps
+
 
 def replace_safenames(tree, sndict):
     """Replaces the safe OTU descriptions with original OTUs."""
@@ -251,18 +297,11 @@ def pairdisttree(alignments, seqnames, bootstrap=False):
 
 
 if __name__ == '__main__':
-    parser = OptionParser()
-    parser.add_option('-s', '--strip', dest='strip', action='store_true',
-                      default=False,
-                      help='strip alignment from unmatched ends')
-    parser.add_option('-b', '--bootstrap', dest='bootstrap',
-                      action='store_true', default=False,
-                      help='Calculate bootstraps')
-    parser.add_option('-n', '--nreps', dest='nreps', default=100,
-                      type='int', help='number of bootstrap replicates')
-    options, args = parser.parse_args()
+
+    input_file, strip, bootstrap, nreps = option_parser()
+
     seqs = [(s.id, s.seq.tostring())
-            for s in list(AlignIO.read(args[0], 'fasta'))]
+            for s in list(AlignIO.read(input_file, 'fasta'))]
     safenames = {}
     seqsnew = []
     # PHYLIP software needs strict phylip format, i.e. sequence names
@@ -276,14 +315,14 @@ if __name__ == '__main__':
         safenames[safename] = seqname
         seqsnew.append((safename, seq.replace('-', '')))
         # print seqname,' -> ',safename
-    all_alignments = all_pairwise_alignments(seqsnew, stripgaps=options.strip)
+    all_alignments = all_pairwise_alignments(seqsnew, stripgaps=strip)
     safenamesorder = zip(*seqsnew)[0]
 
     trees = []
-    if options.bootstrap:
+    if bootstrap:
         log = open('pairdist_bootstrap.log', 'w')
-        for i in range(options.nreps):
-            print 'Bootstrap %d / %d' % (i+1, options.nreps)
+        for i in range(nreps):
+            print 'Bootstrap %d / %d' % (i+1, nreps)
             bs_tree = pairdisttree(all_alignments,
                                    safenamesorder, bootstrap=True)
             trees.append(bs_tree)
@@ -293,7 +332,7 @@ if __name__ == '__main__':
     else:
         trees = [pairdisttree(all_alignments, safenamesorder)]
 
-    otn = open(args[0] + '.tree', 'w')
+    otn = open(input_file + '.tree', 'w')
     otn.write('begin trees;\n')
     for i, t in enumerate(trees):
         otn.write('tree pdtree%d = %s;\n' %
