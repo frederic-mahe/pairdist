@@ -31,7 +31,7 @@ import random
 import itertools
 import subprocess
 from optparse import OptionParser
-from Bio import pairwise2, AlignIO
+from Bio import pairwise2, AlignIO, SeqIO
 from Bio.Align.Applications import ClustalwCommandline
 
 # Needed for proper execution:
@@ -156,6 +156,25 @@ def sanity_check():
     if programs_status["clustalw2"]:
         clustalw = "clustalw2"
     return clustalw, protdist, neighbor
+
+
+def parse_fasta_file(input_file):
+    """Extract raw fasta sequences (remove gaps)"""
+    with open(input_file, "rU") as input_file:
+        seqs = [(record.id, str(record.seq).lower().replace("-", ""))
+                for record in SeqIO.parse(input_file, "fasta")]
+    return seqs
+
+
+def use_safenames(seqs):
+    """Phylip needs sequence names of exactly 10 characters"""
+    safenames = dict()
+    seqsnew = list()
+    for i, (seqname, seq) in enumerate(seqs):
+        safename = str(i).zfill(10)
+        safenames[safename] = seqname
+        seqsnew.append((safename, seq))
+    return safenames, seqsnew
 
 
 def replace_safenames(tree, sndict):
@@ -329,27 +348,10 @@ if __name__ == '__main__':
 
     input_file, strip, bootstrap, nreps = option_parser()
     CLUSTALWCOMMAND, PROTDIST, NEIGHBOR = sanity_check()
+    seqs = parse_fasta_file(input_file)
+    safenames, seqsnew = use_safenames(seqs)
 
     # create tmp files and pointers
-
-    # parse the fasta file (normal IO, degap reads if needed)
-    seqs = [(s.id, s.seq.tostring())
-            for s in list(AlignIO.read(input_file, 'fasta'))]
-    
-    # use safenames
-    safenames = {}
-    seqsnew = []
-    # PHYLIP software needs strict phylip format, i.e. sequence names
-    # of exactly 10 characters. We substitute original sequence names
-    # during script execution
-    for i, (seqname, seq) in enumerate(seqs):
-        safename = str(i).zfill(3) + seqname[:4] + str(i).zfill(3)
-        safename = safename[:10]  # 10 characters max
-        safename = ''.join([c for c in safename if c.isalnum()])
-        safename = safename.zfill(10)
-        safenames[safename] = seqname
-        seqsnew.append((safename, seq.replace('-', '')))
-        # print seqname,' -> ',safename
 
     # do the pairwise alignments
     all_alignments = all_pairwise_alignments(seqsnew, stripgaps=strip)
