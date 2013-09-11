@@ -94,7 +94,7 @@ def option_parser():
     sequences, using maximum likelihood distances based on pairwise
     sequence alignments."""
     
-    parser = OptionParser(usage="usage: %prog --input_file fasta_file [--strip --bootstrap --nreps integer]",
+    parser = OptionParser(usage="usage: %prog --input_file fasta_file [--bootstrap --nreps integer]",
                           description = desc,
                           version = "%prog version 1.0")
 
@@ -103,12 +103,6 @@ def option_parser():
                       action = "store",
                       dest = "input_file",
                       help = "set <FILENAME> as input fasta file.")
-
-    parser.add_option("-s", "--strip",
-                      dest = "strip",
-                      action = "store_true",
-                      default = False,
-                      help = "strip alignment from unmatched ends")
 
     parser.add_option("-b", "--bootstrap",
                       dest = "bootstrap",
@@ -124,7 +118,7 @@ def option_parser():
 
     (options, args) = parser.parse_args()
     
-    return options.input_file, options.strip, options.bootstrap, options.nreps
+    return options.input_file, options.bootstrap, options.nreps
 
 
 def sanity_check():
@@ -235,28 +229,15 @@ def align_pairwise(seq1, seq2):
     return bestseq1, bestseq2, length
 
 
-def all_pairwise_alignments(sequences, stripgaps=False):
+def all_pairwise_alignments(allpairs):
     """
-    Gets a list of sequences [(name, sequence), (name,sequence),...].
-    Returns a list of pairs [((name,seq),(name,seq)),...] with all
-    pairwise alignments. Positions with only gaps in both aligned
-    sequences can be stripped off.
+    Gets a list of pairs of sequences, return all pairwise alignments
     """
-    allpairs = get_all_possible_pairs(sequences)
     all_alignments = []
-    for i, p in enumerate(allpairs):
-        print '%d of %d ' % (i+1, len(allpairs))
-        bestseq1, bestseq2, length = align(ALIGNMENT_METHOD, p[0], p[1])
-        if stripgaps:
-            bs1 = ''
-            bs2 = ''
-            for i in range(len(bestseq1)):
-                if bestseq1[i] != '-' and bestseq2[i] != '-':
-                    bs1 += bestseq1[i]
-                    bs2 += bestseq2[i]
-            all_alignments.append(((p[0][0], bs1), (p[1][0], bs2)))
-        else:
-            all_alignments.append(((p[0][0], bestseq1), (p[1][0], bestseq2)))
+    for i, pair in enumerate(allpairs):
+        print '%d of %d ' % (i + 1, len(allpairs))
+        bestseq1, bestseq2, length = align(ALIGNMENT_METHOD, pair[0], pair[1])
+        all_alignments.append(((pair[0][0], bestseq1), (pair[1][0], bestseq2)))
     print '%d pairwise alignments calculated.' % len(all_alignments)
     return all_alignments
 
@@ -346,15 +327,15 @@ def pairdisttree(alignments, seqnames, bootstrap=False):
 
 if __name__ == '__main__':
 
-    input_file, strip, bootstrap, nreps = option_parser()
+    input_file, bootstrap, nreps = option_parser()
     CLUSTALWCOMMAND, PROTDIST, NEIGHBOR = sanity_check()
     seqs = parse_fasta_file(input_file)
     safenames, seqsnew = use_safenames(seqs)
+    allpairs = get_all_possible_pairs(seqsnew)
+    all_alignments = all_pairwise_alignments(allpairs)
 
     # create tmp files and pointers
-
-    # do the pairwise alignments
-    all_alignments = all_pairwise_alignments(seqsnew, stripgaps=strip)
+    
     safenamesorder = zip(*seqsnew)[0]
 
     trees = []
