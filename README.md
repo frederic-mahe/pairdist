@@ -54,7 +54,7 @@ sequences will occur in a later release.
 
 Besides the Phylip and Clustal packages, the python module
 [Biopython](http://www.biopython.org) is required to run
-pairdist.py. Pairdist has been tested with biopython version 1.61;
+pairdist.py. Pairdist has been tested with Biopython version 1.59;
 newer versions are likely to work as well. An alternative for
 *clustalw2* is available in the Biopython package and integrated in
 pairdist.py, but execution time is greatly decreased when *clustalw2*
@@ -100,7 +100,7 @@ python pairdist.py -i sequences.fas -b -n 100
 ```
 
 will, in addition to the NJ-tree, also calculate 100 bootstrap
-replicates, written to the file "pairdist_bootstrap.trees". Bootstrap
+replicates, written to the file `pairdist_bootstrap.trees`. Bootstrap
 trees and NJ-tree are then merged into a single output file, named as
 above. This file contains the NJ-tree with branch lengths together
 with the bootstrap frequencies, and can be displayed using
