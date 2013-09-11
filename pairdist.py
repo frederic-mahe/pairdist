@@ -25,33 +25,26 @@ __author__ = "Frank Kauff <frank.kauff@gmx.de>"
 # This version of pairdist has been modified by Frédéric Mahé
 # <mahe@rhrk.uni-kl.fr>
 
-# Needed for proper execution:
-# -  "dnadist", "protdist" and "neighbor" commands from the PHYLIP software package <http://evolution.genetics.washington.edu/phylip.html>
-# -  "clustalw2" from CLUSTAL software package <http://www.clustal.org/>
-# -  Biopython: avaliable at www.biopython.org
-
 import os
 import sys
 import random
+import subprocess
 from optparse import OptionParser
 from Bio import pairwise2, AlignIO
 from Bio.Align.Applications import ClustalwCommandline
 
-# Commands needed. If these are not in your regular $PATH, adjust
-# here. With recent versions of phylip, the commands "dnadist" and
+# Needed for proper execution:
+# - PHYLIP <http://evolution.genetics.washington.edu/phylip.html>
+# - CLUSTAL <http://www.clustal.org>
+# - Biopython <http://www.biopython.org>
+
+# With recent versions of phylip, the commands "dnadist" and
 # "neighbor" has to be preceeded by the command "phylip": "phylip
 # dnadist" for instance. Older versions can call the sub-programs
 # directly.
 CLUSTALWCOMMAND = 'clustalw'
 PROTDIST = "phylip dnadist"
 NEIGHBOR = 'phylip neighbor'
-NJ_TREE = 'outtree'
-
-# If no clustalw is available, Bio.pairwise (slower) can be used as a
-# substitute. Change ALIGNMENT_METHOD accordingly
-PAIRWISE2 = 1
-CLUSTALW = 2
-ALIGNMENT_METHOD = CLUSTALW
 
 # filenames for intermediate files.
 CLUSTALFASTA = 'clustal.fas'
@@ -64,6 +57,13 @@ PROTDIST_COMMANDFILE = 'protcommand'
 NEIGHBOR_COMMANDFILE = 'njcommand'
 
 # input commands for protdist and neighbor
+NJ_TREE = 'outtree'
+
+# If no clustalw is available, Bio.pairwise (slower) can be used as a
+# substitute. Change ALIGNMENT_METHOD accordingly
+PAIRWISE2 = 1
+CLUSTALW = 2
+ALIGNMENT_METHOD = CLUSTALW
 
 PROTDIST_COMMANDS = """2
 m
@@ -124,6 +124,37 @@ def option_parser():
     (options, args) = parser.parse_args()
     
     return options.input_file, options.strip, options.bootstrap, options.nreps
+
+
+def sanity_check():
+    """Check for the presence of required third-party softwares
+    (PHYLIP, CLUSTAL and BIOPYTHON)."""
+    protdist = "dnadist"
+    neighbor = "neighbor"
+    clustalw = "clustalw"
+    programs = ("phylip", "dnadist", "protdist", "neighbor", "clustalw", "clustalw2")
+    programs_status = dict(zip(programs, [False] * len(programs)))
+    for program in programs:
+        try:
+            returncode = subprocess.call("which" + " " + program, shell=True)
+            if returncode is 0:
+                programs_status[program] = True
+        except OSError as e:
+            print >>sys.stderr, "Execution failed:", e
+    # Abort if anything is missing
+    if programs_status["phylip"] is False and (programs_status["dnadist"] or programs_status["neighbor"] or programs_status["protdist"]) is False:
+        print >>sys.stderr, "Phylip package is missing!"
+        sys.exit(-1)
+    if programs_status["clustalw"] is False and programs_status["clustalw2"] is False:
+        print >>sys.stderr, "Clustal package is missing!"
+        sys.exit(-1)
+    # Target the correct commands
+    if programs_status["phylip"]:
+        protdist = "phylip dnadist"
+        neighbor = "phylip neighbor"
+    if programs_status["clustalw2"]:
+        clustalw = "clustalw2"
+    return clustalw, protdist, neighbor
 
 
 def replace_safenames(tree, sndict):
@@ -299,6 +330,7 @@ def pairdisttree(alignments, seqnames, bootstrap=False):
 if __name__ == '__main__':
 
     input_file, strip, bootstrap, nreps = option_parser()
+    CLUSTALWCOMMAND, PROTDIST, NEIGHBOR = sanity_check()
 
     seqs = [(s.id, s.seq.tostring())
             for s in list(AlignIO.read(input_file, 'fasta'))]
