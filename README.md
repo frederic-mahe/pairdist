@@ -37,9 +37,9 @@ PairDist is an attempt to overcome this problem for nucleotide
 sequences that were previously problematic, by reducing the data to
 smaller taxonomic sets so they are more easily alignable. Pairdist.py
 is a python script that connects the commands *clustalw2* from the
-[ClustalW package](http://www.clustal.org/clustal2 "Clustal website")
+[Clustal package](http://www.clustal.org/clustal2 "Clustal website")
 with *dnadist* and *neighbor* from the
-[PHYLIP package](http://evolution.genetics.washington.edu/phylip.html
+[Phylip package](http://evolution.genetics.washington.edu/phylip.html
 "Phylip homepage"). Rather than calculating sequence distance from a
 full multiple sequence alignment, each sequence pair is aligned
 independently (with clustal) prior to the calculation of the Maximum
@@ -52,21 +52,17 @@ sequences will occur in a later release.
 
 ## Requirements ##
 
-In order to run PairDist, other software needs to be installed on your
-system. First, the python module Biopython (www.biopython.org, Cock et
-al. 2009) is required for pairdist.py. Pairdist has been tested with
-version 1.61; newer are likely to work as well. Second, from the
-PHYLIP software package (http://www.phylippackage.org), the commands
-protdist and neighbor are needed. Third, from the ClustalW package
-(http://www.clustal.org/clustal2), the command clustalw2 is highly
-recommended. An alternative for clustalw2 is available in the
-Biopython package and integrated in pairdist.py, but execution time is
-greatly decreased when clustalw2 is not available.  After a standard
-installation of Biopython, the PHYLIP package, and ClustalW2,
-pairdist.py should run without changes, assuming that clustalw2,
-protdist, and neighbor are in your path and available system-wide. For
-installation details of the prerequisite software packages please
-consult their respective manuals.
+Besides the Phylip and Clustal packages, the python module
+[Biopython](http://www.biopython.org) is required to run
+pairdist.py. Pairdist has been tested with biopython version 1.61;
+newer versions are likely to work as well. An alternative for
+*clustalw2* is available in the Biopython package and integrated in
+pairdist.py, but execution time is greatly decreased when *clustalw2*
+is not available. After a standard installation of Biopython, Phylip
+and Clustal packages, pairdist.py should run without changes, assuming
+that *clustalw2*, *dnadist*, and *neighbor* are in your path and
+available system-wide. For installation details of the prerequisite
+software packages please consult their respective manuals.
 
 ## Installation and use ##
 
