@@ -39,13 +39,9 @@ from Bio.Align.Applications import ClustalwCommandline
 # - CLUSTAL <http://www.clustal.org>
 # - Biopython <http://www.biopython.org>
 
-# With recent versions of phylip, the commands "dnadist" and
-# "neighbor" has to be preceeded by the command "phylip": "phylip
-# dnadist" for instance. Older versions can call the sub-programs
-# directly.
-CLUSTALWCOMMAND = 'clustalw'
-PROTDIST = "phylip dnadist"
-NEIGHBOR = 'phylip neighbor'
+# CLUSTALWCOMMAND = 'clustalw'
+# PROTDIST = "phylip dnadist"
+# NEIGHBOR = 'phylip neighbor'
 
 # filenames for intermediate files.
 CLUSTALFASTA = 'clustal.fas'
@@ -94,7 +90,7 @@ def option_parser():
     sequences, using maximum likelihood distances based on pairwise
     sequence alignments."""
     
-    parser = OptionParser(usage="usage: %prog --input_file fasta_file [--bootstrap --nreps integer]",
+    parser = OptionParser(usage="usage: %prog --input_file fasta_file [--bootstrap --nreps integer --protein]",
                           description = desc,
                           version = "%prog version 1.0")
 
@@ -116,15 +112,23 @@ def option_parser():
                       type = "int",
                       help = "number of bootstrap replicates")
 
+    parser.add_option("-p", "--protein",
+                      dest = "protein",
+                      action = "store_true",
+                      default = False,
+                      help = "use amino acid sequences (experimental)")
+
     (options, args) = parser.parse_args()
     
-    return options.input_file, options.bootstrap, options.nreps
+    return options.input_file, options.bootstrap, options.nreps, options.protein
 
 
-def sanity_check():
+def sanity_check(protein):
     """Check for the presence of required third-party softwares
     (PHYLIP, CLUSTAL and BIOPYTHON)."""
     protdist = "dnadist"
+    if protein:
+        protdist = "protdist"
     neighbor = "neighbor"
     clustalw = "clustalw"
     programs = ("phylip", "dnadist", "protdist", "neighbor", "clustalw", "clustalw2")
@@ -143,10 +147,11 @@ def sanity_check():
     if programs_status["clustalw"] is False and programs_status["clustalw2"] is False:
         print >>sys.stderr, "Clustal package is missing!"
         sys.exit(-1)
-    # Target the correct commands
+    # Target the correct commands (phylip sub-programs can be called
+    # directly, or sometimes need to be preceeded by "phylip")
     if programs_status["phylip"]:
-        protdist = "phylip dnadist"
-        neighbor = "phylip neighbor"
+        protdist = "phylip " + protdist
+        neighbor = "phylip " + neighbor
     if programs_status["clustalw2"]:
         clustalw = "clustalw2"
     return clustalw, protdist, neighbor
@@ -327,8 +332,8 @@ def pairdisttree(alignments, seqnames, bootstrap=False):
 
 if __name__ == '__main__':
 
-    input_file, bootstrap, nreps = option_parser()
-    CLUSTALWCOMMAND, PROTDIST, NEIGHBOR = sanity_check()
+    input_file, bootstrap, nreps, protein = option_parser()
+    CLUSTALWCOMMAND, PROTDIST, NEIGHBOR = sanity_check(protein)
     seqs = parse_fasta_file(input_file)
     safenames, seqsnew = use_safenames(seqs)
     allpairs = get_all_possible_pairs(seqsnew)
@@ -341,7 +346,7 @@ if __name__ == '__main__':
     trees = []
     if bootstrap:
         log = open('pairdist_bootstrap.log', 'w')
-        for i in range(nreps):
+        for i in xrange(nreps):
             print 'Bootstrap %d / %d' % (i+1, nreps)
             bs_tree = pairdisttree(all_alignments,
                                    safenamesorder, bootstrap=True)
