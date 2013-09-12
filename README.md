@@ -47,8 +47,8 @@ Likelihood distance with *dnadist*. From the resulting pairwise
 distances, a matrix is generated which serves as input for *neighbor*
 which finally calculates a neighbor-joining tree. A bootstrap option
 is available, where the two-sequence alignment is bootstrapped prior
-to distance calculation. Modifying this script to handle protein
-sequences will occur in a later release.
+to distance calculation. PairDist can handle protein sequences, but
+this option is considered as experimental.
 
 ## Requirements ##
 
@@ -75,8 +75,14 @@ e.g. `/bin`, `/usr/bin`, or `/usr/local/bin` or in most GNU/Linux or
 Mac systems. The details may vary according to the specific set-up of
 your computer.
 
-Pairdist.py is a simple command line tool. Given an input file in
-FASTA format, the program is called as:
+Pairdist.py is a simple command line tool. A short help describing the
+usage and options can be printed as such:
+
+```
+python pairdist.py -h
+```
+
+Given an input file in FASTA format, the program is called as:
 
 ```
 python pairdist.py -i sequences.fas
@@ -89,8 +95,8 @@ Among various intermediate files produced by the script, the resulting
 tree in Newick-format is written to a file which has the same name as
 your input file with the suffix '.tree' added. It can be read as input
 and displayed by most applications for visualization of phylogenetic
-trees, e.g. [FigTree](http://tree.bio.ed.ac.uk/software/figtree/ "FigTree: viewer
-of phylogenetic trees").
+trees, e.g. [FigTree](http://tree.bio.ed.ac.uk/software/figtree/
+"FigTree: viewer of phylogenetic trees").
 
 With the options `-b` and `-n`, a bootstrap run is performed with a
 number of replicates specified with `-n`, e.g.
