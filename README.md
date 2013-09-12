@@ -82,7 +82,8 @@ usage and options can be printed as such:
 python pairdist.py -h
 ```
 
-Given an input file in FASTA format, the program is called as:
+Given an input file in FASTA format (aligned sequences or not), the
+program is called as:
 
 ```
 python pairdist.py -i sequences.fas
