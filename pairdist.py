@@ -121,7 +121,7 @@ def option_parser():
 
 def sanity_check(protein):
     """Check for the presence of required third-party softwares
-    (PHYLIP, CLUSTAL and BIOPYTHON)."""
+    (PHYLIP and CLUSTAL)."""
     seqdist = "dnadist"
     if protein:
         seqdist = "protdist"
@@ -129,18 +129,16 @@ def sanity_check(protein):
     clustalw = "clustalw"
     programs = ("phylip", "dnadist", "protdist", "neighbor", "clustalw", "clustalw2")
     programs_status = dict(zip(programs, [False] * len(programs)))
+    # Check if the programs are available
     for program in programs:
-        try:
-            returncode = subprocess.call("which" + " " + program, shell=True)
-            if returncode is 0:
-                programs_status[program] = True
-        except OSError as e:
-            print >>sys.stderr, "Execution failed:", e
+        returncode = subprocess.call("which" + " " + program, shell=True)
+        if returncode is 0:
+            programs_status[program] = True
     # Abort if anything is missing
     if programs_status["phylip"] is False and (programs_status["dnadist"] or programs_status["neighbor"] or programs_status["protdist"]) is False:
         print >>sys.stderr, "Phylip package is missing!"
         sys.exit(-1)
-    if programs_status["clustalw"] is False and programs_status["clustalw2"] is False:
+    if (programs_status["clustalw"] and programs_status["clustalw2"]) is False:
         print >>sys.stderr, "Clustal package is missing!"
         sys.exit(-1)
     # Target the correct commands (phylip sub-programs can be called
