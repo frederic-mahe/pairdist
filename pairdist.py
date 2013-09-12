@@ -39,21 +39,17 @@ from Bio.Align.Applications import ClustalwCommandline
 # - CLUSTAL <http://www.clustal.org>
 # - Biopython <http://www.biopython.org>
 
-# CLUSTALWCOMMAND = 'clustalw'
-# PROTDIST = "phylip dnadist"
-# NEIGHBOR = 'phylip neighbor'
-
 # filenames for intermediate files.
 CLUSTALFASTA = 'clustal.fas'
 CLUSTALALIGNMENT = 'clustal.aln'
-INFILE_PROTDIST = 'infile'
-OUTFILE_PROTDIST = 'outfile'
+INFILE_SEQDIST = 'infile'
+OUTFILE_SEQDIST = 'outfile'
 INFILE_NEIGHBOR = 'infile'
 OUTFILE_NEIGHBOR = 'outfile'
-PROTDIST_COMMANDFILE = 'protcommand'
+SEQDIST_COMMANDFILE = 'protcommand'
 NEIGHBOR_COMMANDFILE = 'njcommand'
 
-# input commands for protdist and neighbor
+# input commands for seqdist and neighbor
 NJ_TREE = 'outtree'
 
 # If no clustalw is available, Bio.pairwise (slower) can be used as a
@@ -62,7 +58,7 @@ PAIRWISE2 = 1
 CLUSTALW = 2
 ALIGNMENT_METHOD = CLUSTALW
 
-PROTDIST_COMMANDS = """2
+SEQDIST_COMMANDS = """2
 m
 d
 %d
@@ -126,9 +122,9 @@ def option_parser():
 def sanity_check(protein):
     """Check for the presence of required third-party softwares
     (PHYLIP, CLUSTAL and BIOPYTHON)."""
-    protdist = "dnadist"
+    seqdist = "dnadist"
     if protein:
-        protdist = "protdist"
+        seqdist = "protdist"
     neighbor = "neighbor"
     clustalw = "clustalw"
     programs = ("phylip", "dnadist", "protdist", "neighbor", "clustalw", "clustalw2")
@@ -150,11 +146,11 @@ def sanity_check(protein):
     # Target the correct commands (phylip sub-programs can be called
     # directly, or sometimes need to be preceeded by "phylip")
     if programs_status["phylip"]:
-        protdist = "phylip " + protdist
+        seqdist = "phylip " + seqdist
         neighbor = "phylip " + neighbor
     if programs_status["clustalw2"]:
         clustalw = "clustalw2"
-    return clustalw, protdist, neighbor
+    return clustalw, seqdist, neighbor
 
 
 def parse_fasta_file(input_file):
@@ -260,7 +256,7 @@ def bootstrap_record(sequences):
 def pairdisttree(alignments, seqnames, bootstrap=False):
     """Returns a tree (plain text newick) from a bunch of sequences
     [(name,Seq()),...]"""
-    # prepare input file for PROTDIST and call PROTDIST
+    # prepare input file for SEQDIST and call SEQDIST
     infile = ''
     npairs = len(alignments)
     for al in alignments:
@@ -273,26 +269,26 @@ def pairdisttree(alignments, seqnames, bootstrap=False):
             infile += INFILE_FORMAT % (2, length, al[0][0],
                                        al[0][1], al[1][0], al[1][1])
 
-    if os.path.exists(OUTFILE_PROTDIST):
-        os.remove(OUTFILE_PROTDIST)
-    inf = open(INFILE_PROTDIST, 'w')
+    if os.path.exists(OUTFILE_SEQDIST):
+        os.remove(OUTFILE_SEQDIST)
+    inf = open(INFILE_SEQDIST, 'w')
     inf.write(infile)
     inf.close()
 
-    pc = open(PROTDIST_COMMANDFILE, 'w')
-    pc.write(PROTDIST_COMMANDS % npairs)
+    pc = open(SEQDIST_COMMANDFILE, 'w')
+    pc.write(SEQDIST_COMMANDS % npairs)
     pc.close()
 
-    # Execute PROTDIST
-    os.system('%s < %s > log' % (PROTDIST, PROTDIST_COMMANDFILE))
+    # Execute SEQDIST
+    os.system('%s < %s > log' % (SEQDIST, SEQDIST_COMMANDFILE))
 
-    # Read output of PROTDIST and verify length
+    # Read output of SEQDIST and verify length
     distdict = {}
-    outfile = open(OUTFILE_PROTDIST).readlines()
+    outfile = open(OUTFILE_SEQDIST).readlines()
     if len(outfile) != npairs * 3:
         sys.exit('Error in PROTDIST outfile\n' + '\n'.join(outfile))
 
-    # format PROTDIST output and generate input file for neighbor
+    # format SEQDIST output and generate input file for neighbor
     while outfile:
         l1, l2 = outfile[1].split(), outfile[2].split()
         seq1, seq2 = l1[0], l2[0]
@@ -333,7 +329,7 @@ def pairdisttree(alignments, seqnames, bootstrap=False):
 if __name__ == '__main__':
 
     input_file, bootstrap, nreps, protein = option_parser()
-    CLUSTALWCOMMAND, PROTDIST, NEIGHBOR = sanity_check(protein)
+    CLUSTALWCOMMAND, SEQDIST, NEIGHBOR = sanity_check(protein)
     seqs = parse_fasta_file(input_file)
     safenames, seqsnew = use_safenames(seqs)
     allpairs = get_all_possible_pairs(seqsnew)
