@@ -3,7 +3,8 @@ pairdist
 
 PairDist creates a neighbor-joining tree from a set of sequences,
 using maximum likelihood distances based on pairwise sequence
-alignment.
+alignment. PairDist has been created by Frank Kauff and modified by
+Frédéric Mahé.
 
 ## PairDist's logic ##
 
