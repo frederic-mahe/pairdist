@@ -64,7 +64,7 @@ that *clustalw2*, *dnadist*, and *neighbor* are in your path and
 available system-wide. For installation details of the prerequisite
 software packages please consult their respective manuals.
 
-## Installation and use ##
+## Installation and Usage ##
 
 The program pairdist.py is written in the
 [python programming language](http://www.python.org) and available for
@@ -113,3 +113,8 @@ above. This file contains the NJ-tree with branch lengths together
 with the bootstrap frequencies, and can be displayed using
 [FigTree](http://tree.bio.ed.ac.uk/software/figtree/ "FigTree: viewer
 of phylogenetic trees") or other programs.
+
+ParDist is distributed with a test file `sequences.fas` containing 6
+fasta sequences (18S rRNA region V9) extracted from an early version
+of what is now known as the
+[Protist Ribosomal Reference Database](http://ssu-rrna.org/).
